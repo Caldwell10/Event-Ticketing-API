@@ -2,3 +2,4 @@ reserve-env
 __pycache__/
 *.pyc
 alembic.ini
+*.env
