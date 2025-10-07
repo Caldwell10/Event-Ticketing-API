@@ -1,10 +1,8 @@
 from database import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Date, Time, func
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Index, CheckConstraint,text
 from sqlalchemy.orm import relationship
-from datetime import datetime, time, date
 
-
-
+# Define User model
 class User(Base):
     __tablename__ = "users"
 
@@ -12,47 +10,65 @@ class User(Base):
     name = Column(String, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String,nullable=False)
-    is_active = Column(Boolean, default=True)
 
-    reservations = relationship("Reservations", back_populates="user", cascade="all, delete-orphan")
+    reservations = relationship("Reservation", back_populates="user")
 
-
-class Shows(Base):
+# Define Shows model
+class Show(Base):
     __tablename__ = "shows"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True, nullable=False)
     venue = Column(String, nullable=False, index=True)
-    date = Column(Date, nullable=False)
-    time = Column(Time, nullable=False)
+    starts_at = Column(DateTime(timezone=True), nullable=False, index=True)
 
-    seats = relationship("Seats", back_populates="shows", cascade="all, delete-orphan") 
+    seats = relationship("Seat", back_populates="show", cascade="all, delete-orphan") 
 
-class Seats(Base):
+# Define Seats model
+class Seat(Base):
     __tablename__ = "seats"
 
     id = Column(Integer, primary_key=True, index=True)
-    seat_number = Column(String, unique=True, index=True, nullable=False)
-    is_available = Column(Boolean, default=True)
+    seat_number = Column(String, index=True, nullable=False)
+    show_id = Column(Integer, ForeignKey("shows.id", ondelete="CASCADE"), nullable=False)
 
-    shows = relationship("Shows", back_populates="seats")
+    show = relationship("Show", back_populates="seats")
+    reservations=relationship("Reservation", back_populates="seat", cascade="all, delete-orphan")
 
-class Reservations(Base):
+    # prevent duplicate labels within the show e.g  two A2 seats in the same show
+    __table_args__ = (
+        Index("unique_label_per_show", "show_id", "seat_number", unique=True),
+    )
+
+
+# Define Reservations model
+class Reservation(Base):
     __tablename__ = "reservations"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    seat_id = Column(Integer, ForeignKey("seats.id"), nullable=False)
-    show_id = Column(Integer, ForeignKey("shows.id"), nullable=False)
-    reservation_time = Column(DateTime, server_default=func.now())
-    status = Column(String, server_default="AVAILABLE")  # e.g., active, cancelled
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    seat_id = Column(Integer, ForeignKey("seats.id", ondelete="CASCADE"), nullable=False, index=True)
+    status = Column(String, server_default="HELD", nullable=False)  # expiry logic
+    hold_expiry = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False) 
 
+    
     user = relationship("User", back_populates="reservations")
-    seat = relationship("Seats")
-    show = relationship("Shows")
+    seat = relationship("Seat", back_populates="reservations")
+    
 
     __table_args__ = (
-        # Ensure that 
+        # one active reservation (HELD or CONFIRMED) per seat
+        Index('unique_active_reservation_per_seat',
+            'seat_id',
+            unique=True,
+            postgresql_where = text("status IN ('HELD', 'CONFIRMED')")
+        ),
+        CheckConstraint(
+            "status IN ('HELD', 'CONFIRMED', 'EXPIRED')",
+            name = "reservation_status_check"
+        )
     )
 
 
