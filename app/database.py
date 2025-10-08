@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # Load environement variable from .env file to prevent exposing sensitive DB credentials
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = "postgresql+psycopg2://postgres:postgres@localhost:5432/event_ticketing"
 
 # Create the SQLAlchemy engine
 engine = create_engine(DATABASE_URL)
