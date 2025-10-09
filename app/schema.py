@@ -1,6 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, conlist, conint
+from datetime import datetime
+from typing import Literal
 
-
+# User Schemas
 class UserIn(BaseModel):
     name: str
     phone_number: str = Field(min_length=9)
@@ -10,9 +12,57 @@ class UserIn(BaseModel):
 class UserOut(BaseModel):
     id: int
     name: str
+    phone_number: str
     email: EmailStr
 
     class Config:
         orm_mode = True
 
+# Show Schemas
 class ShowIn(BaseModel):
+    title: str
+    venue: str
+    starts_at: datetime
+
+class ShowOut(BaseModel):
+    id: int
+    title: str
+    venue: str
+    starts_at: datetime
+
+    class Config:
+        orm_mode = True
+
+# Seat Schemas
+class SeatCreateBulk(BaseModel):
+    seat_numbers: conlist(str, min_length=1)  # List of seat numbers
+    show_id: int
+
+class SeatOut(BaseModel):
+    id: int
+    show_id: int
+    seat_number: str
+    
+    class Config:
+        orm_mode = True
+
+
+# Reservation Schemas
+class ReservationIn(BaseModel):
+    user_id: int
+    seat_number: str
+    show_id: int
+    hold_minutes: conint(gt=0, le=20)= 10
+
+class ReservationOut(BaseModel):
+    id: int
+    user_id: int
+    show_id: int
+    seat_number: str
+    status: Literal["HELD", "CONFIRMED", "CANCELLED"]
+    hold_expiry: datetime
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
