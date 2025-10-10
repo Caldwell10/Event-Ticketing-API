@@ -4,7 +4,8 @@ from models import User, Show, Seat, Reservation
 from database import get_db
 from services import hash_password, normalize_seat_labels, calculate_hold_expiry
 from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy import select, func
+from datetime import datetime, timezone
 import uvicorn
 
 
@@ -122,6 +123,7 @@ def hold_seat_reservation(user_id: int, reservation: ReservationCreate, db=Depen
     if not seat:
         raise HTTPException(status_code=404, detail="Seat not found for the specified show")
     
+    # create reservation with hold status "HELD"
     new_reservation = Reservation(
         user_id = user_id,
         seat_id = seat.id,
@@ -137,12 +139,48 @@ def hold_seat_reservation(user_id: int, reservation: ReservationCreate, db=Depen
         # Seat is already reserved
         raise HTTPException(status_code=409, detail="Seat is already reserved")
     
+    # if flush is successful, commit the transaction
     db.commit()
     db.refresh(new_reservation)
 
     return new_reservation
 
+@app.post("/reservations/{reservation_id}/confirm", response_model=ReservationOut)
+def confirm_seat_reservation(reservation_id: int, db=Depends(get_db)):
+    # Lock reservation row to avoid two concurrent confirmations
+    reservation = db.query(Reservation).filter(Reservation.id ==reservation_id).with_for_update().first()
+
+    # if not found, raise 404 error
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+    
+    # confirm idempotently
+    if reservation.status == "CONFIRMED":
+       return reservation
+    
+    # check if reservation has expired
+    if reservation.status != "HELD":
+        raise HTTPException(status_code=400, detail=f"Cannot confirm a reservation with status {reservation.status}")
+    
+    # compare to time in database
+    now_db = db.scalar(select(func.now()))
+    if reservation.hold_expiry <= now_db:
+        reservation.status = "EXPIRED"
+        db.commit()
+        raise HTTPException(status_code=400, detail="Reservation has expired")
+
+    # ensure Integrity errors are handled before committing
+    reservation.status = "CONFIRMED"
+    try:
+        db.commit() 
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Seat is already reserved")
+
+    db.refresh(reservation)
+    return reservation
+
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+    uvicorn.run(app, host="127.0.0.1", port=8001) 
