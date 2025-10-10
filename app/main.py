@@ -92,6 +92,17 @@ def create_seats_bulk(show_id: int, seats: SeatCreateBulk, db=Depends(get_db)):
 
     return new_seats
 
+@app.get("/shows/{show_id}/seats", response_model=list[SeatOut])
+def get_seats_for_show(show_id: int, db=Depends(get_db)):
+    # check if show exists
+    show = db.query(Show).filter(Show.id == show_id).first()
+    if not show:
+        raise HTTPException(status_code=404, detail="Show not found")
+    
+    # fetch seats for the show
+    seats = db.query(Seat).filter(Seat.show_id == show_id).all()
+    return seats
+
 
 
 if __name__ == "__main__":
