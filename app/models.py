@@ -1,4 +1,4 @@
-from database import Base
+from app.database import Base
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Index, CheckConstraint,text
 from sqlalchemy.orm import relationship
 
@@ -67,7 +67,7 @@ class Reservation(Base):
             postgresql_where = text("status IN ('HELD', 'CONFIRMED')")
         ),
         CheckConstraint(
-            "status IN ('HELD', 'CONFIRMED', 'EXPIRED')",
+            "status IN ('HELD', 'CONFIRMED', 'EXPIRED', 'CANCELLED')",
             name = "reservation_status_check"
         )
     )

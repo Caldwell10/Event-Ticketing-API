@@ -56,7 +56,7 @@ class ReservationOut(BaseModel):
     id: int
     user_id: int
     seat_id: int
-    status: Literal["HELD", "CONFIRMED", "EXPIRED"]
+    status: Literal["HELD", "CONFIRMED", "EXPIRED", "CANCELLED"]
     hold_expiry: datetime
     created_at: datetime
     updated_at: datetime
