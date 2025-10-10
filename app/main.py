@@ -3,6 +3,7 @@ from schema import UserCreate, UserOut, ShowCreate, ShowOut, SeatCreateBulk, Sea
 from models import User, Show, Seat, Reservation
 from database import get_db
 from services import hash_password, normalize_seat_labels
+from sqlalchemy.exc import IntegrityError
 
 import uvicorn
 
@@ -58,23 +59,38 @@ def create_show(show: ShowCreate, db=Depends(get_db)):
     return new_show
 
 # bulk create seats endpoint
-app.post("/shows/{show_id}/seats", response_model=list[SeatOut])
-def create_seats_bulk(show_id, seats: SeatCreateBulk, db=Depends(get_db)):
+@app.post("/shows/{show_id}/seats", response_model=list[SeatOut])
+def create_seats_bulk(show_id: int, seats: SeatCreateBulk, db=Depends(get_db)):
      # Check if show exists
     show = db.query(Show).filter(Show.id == show_id).first()
     if not show:
         raise HTTPException(status_code=404, detail="Show not found")
     
+    # normalize seat labels and dedupe labels in the request
+    try:
+        normalized_labels = [normalize_seat_labels(s) for s in seats.seat_numbers]
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+    
+    # use a set to check for duplicates
+    if len(normalized_labels) != len(set(normalized_labels)):
+        raise HTTPException(status_code=400, detail="Duplicate seat labels in request")
 
     # Create seat objects via list comprehension
-    new_seats = [Seat(seat_number=normalize_seat_labels(seat_number)) for seat_number in seats.seat_numbers]
+    new_seats = [Seat(show_id = show_id, seat_number=labels) for labels in normalized_labels]
 
-    # Bulk save seats into database
+    # Bulk save seats into database and handle potential integrity errors
     db.add_all(new_seats)
+    try: 
+        db.flush()  # populate new_seats with IDs
+    except IntegrityError:
+        db.rollback()
+        # Seat labels caused the conflict by violating the unique constraint
+        raise HTTPException(status_code=409, detail="One or more seat labels already exist for this show")
+    
     db.commit()
-    db.refresh(new_seats)  
 
-    return list(new_seats)
+    return new_seats
 
 
 
