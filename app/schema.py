@@ -48,7 +48,6 @@ class SeatOut(BaseModel):
  
 # Reservation Schemas
 class ReservationCreate(BaseModel):
-    user_id: int
     seat_number: str
     show_id: int
     hold_minutes: conint(gt=0, le=20)= 10
@@ -58,7 +57,7 @@ class ReservationOut(BaseModel):
     user_id: int
     show_id: int
     seat_number: str
-    status: Literal["HELD", "CONFIRMED", "CANCELLED"]
+    status: Literal["HELD", "CONFIRMED", "EXPIRED"]
     hold_expiry: datetime
     created_at: datetime
     updated_at: datetime

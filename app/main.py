@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from schema import UserCreate, UserOut, ShowCreate, ShowOut, SeatCreateBulk, SeatOut, ReservationCreate, ReservationOut
 from models import User, Show, Seat, Reservation
 from database import get_db
-from services import hash_password, normalize_seat_labels
+from services import hash_password, normalize_seat_labels, calculate_hold_expiry
 from sqlalchemy.exc import IntegrityError
 
 import uvicorn
@@ -102,6 +102,45 @@ def get_seats_for_show(show_id: int, db=Depends(get_db)):
     # fetch seats for the show
     seats = db.query(Seat).filter(Seat.show_id == show_id).all()
     return seats
+
+# reservation endpoint
+@app.post("/reservations/{user_id}/hold", response_model=ReservationOut)
+def hold_seat_reservation(user_id: int, reservation: ReservationCreate, db=Depends(get_db)):
+    # check if user exists
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # check if show exists
+    show = db.query(Show).filter(Show.id == reservation.show_id).first()
+    if not show:
+        raise HTTPException(status_code=404, detail="Show not found")
+    
+    # check if seat exists for the show
+    seat_label = normalize_seat_labels(reservation.seat_number)
+    seat = db.query(Seat).filter(Seat.show_id == reservation.show_id, Seat.seat_number == seat_label).first()
+    if not seat:
+        raise HTTPException(status_code=404, detail="Seat not found for the specified show")
+    
+    new_reservation = Reservation(
+        user_id = user_id,
+        seat_id = seat.id,
+        status = "HELD",
+        hold_expiry = calculate_hold_expiry(reservation.hold_minutes),
+    )
+
+    db.add(new_reservation)
+    try:
+        db.flush()  # populate new_reservation with ID
+    except IntegrityError:
+        db.rollback()
+        # Seat is already reserved
+        raise HTTPException(status_code=409, detail="Seat is already reserved")
+    
+    db.commit()
+    db.refresh(new_reservation)
+
+    return new_reservation
 
 
 
