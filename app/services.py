@@ -1,6 +1,10 @@
 import bcrypt
 from sqlalchemy.orm import Session
 import re
+from datetime import datetime, timedelta
+from database import get_db
+from fastapi import Depends
+from models import Reservation
 
 # hash payload password before being stored in the database
 def hash_password(password: str):
@@ -20,7 +24,8 @@ def normalize_seat_labels(seat_labels):
     if not isinstance(seat_labels, str):
         raise ValueError("Seat label must be a string")
     return re.sub(r"\s+", "", seat_labels).upper()
-    
-
 
 # calculate hold expiry time
+def calculate_hold_expiry(hold_minutes: int):
+    return datetime.utcnow() + timedelta(minutes=hold_minutes)
+
