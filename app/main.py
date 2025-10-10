@@ -104,7 +104,7 @@ def get_seats_for_show(show_id: int, db=Depends(get_db)):
     seats = db.query(Seat).filter(Seat.show_id == show_id).all()
     return seats
 
-# reservation endpoint
+# reservation endpoints
 @app.post("/reservations/{user_id}/hold", response_model=ReservationOut)
 def hold_seat_reservation(user_id: int, reservation: ReservationCreate, db=Depends(get_db)):
     # check if user exists
@@ -180,6 +180,34 @@ def confirm_seat_reservation(reservation_id: int, db=Depends(get_db)):
     db.refresh(reservation)
     return reservation
 
+@app.post("/reservations/{reservation_id}/release", response_model=ReservationOut)
+def release_seat_reservation(reservation_id: int, db=Depends(get_db)):
+    # find if reservation exists
+    reservation = db.query(Reservation).filter(Reservation.id == reservation_id).with_for_update().first()
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+    
+    # check if already cancelled: idempotent
+    if reservation.status == "CANCELLED":
+        return reservation
+    
+    # only held reservations can be cancelled
+    if reservation.status != "HELD":
+        raise HTTPException(status_code=400, detail=f"Cannot cancel a reservation with status {reservation.status}")
+    
+    # cancel the reservation
+    reservation.status = "CANCELLED"
+
+    # commit the change and handle potential integrity errors
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to cancel reservation due to a server error")
+    
+    db.refresh(reservation)
+
+    return reservation
 
 
 if __name__ == "__main__":
