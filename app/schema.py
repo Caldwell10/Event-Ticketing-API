@@ -3,13 +3,13 @@ from datetime import datetime
 from typing import Literal
 
 # User Schemas
-class UserIn(BaseModel):
+class UserCreate(BaseModel):
     name: str
     phone_number: str = Field(min_length=9)
     email: EmailStr
     password: str
 
-class UserOut(BaseModel):
+class UserCreate(BaseModel):
     id: int
     name: str
     phone_number: str
@@ -19,7 +19,7 @@ class UserOut(BaseModel):
         orm_mode = True
 
 # Show Schemas
-class ShowIn(BaseModel):
+class ShowCreate(BaseModel):
     title: str
     venue: str
     starts_at: datetime
@@ -48,7 +48,7 @@ class SeatOut(BaseModel):
 
 
 # Reservation Schemas
-class ReservationIn(BaseModel):
+class ReservationCreate(BaseModel):
     user_id: int
     seat_number: str
     show_id: int

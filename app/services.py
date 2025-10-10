@@ -13,5 +13,8 @@ def hash_password(password: str):
 
     return hashed_password.decode('utf-8')
 
+# normalize seat labels
 
-    
+
+
+# calculate hold expiry time
