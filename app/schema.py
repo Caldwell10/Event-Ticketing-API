@@ -9,7 +9,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-class UserCreate(BaseModel):
+class UserOut(BaseModel):
     id: int
     name: str
     phone_number: str
@@ -46,7 +46,7 @@ class SeatOut(BaseModel):
     class Config:
         orm_mode = True
 
-
+ 
 # Reservation Schemas
 class ReservationCreate(BaseModel):
     user_id: int
