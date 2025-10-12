@@ -1,11 +1,10 @@
 from fastapi import FastAPI, HTTPException, Depends
-from schema import UserCreate, UserOut, ShowCreate, ShowOut, SeatCreateBulk, SeatOut, ReservationCreate, ReservationOut
+from schema import UserCreate, UserOut, ShowCreate, ShowOut, SeatCreateBulk, SeatOut, ReservationCreate, ReservationOut, SeatAvailabilityOut
 from models import User, Show, Seat, Reservation
 from database import get_db
 from services import hash_password, normalize_seat_labels, calculate_hold_expiry
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select, func
-from datetime import datetime, timezone
 import uvicorn
 
 
@@ -180,6 +179,7 @@ def confirm_seat_reservation(reservation_id: int, db=Depends(get_db)):
     db.refresh(reservation)
     return reservation
 
+# cancel reservation endpoint
 @app.post("/reservations/{reservation_id}/release", response_model=ReservationOut)
 def release_seat_reservation(reservation_id: int, db=Depends(get_db)):
     # find if reservation exists
@@ -208,6 +208,14 @@ def release_seat_reservation(reservation_id: int, db=Depends(get_db)):
     db.refresh(reservation)
 
     return reservation
+
+# list seats with status
+@app.get("/shows/{show_id}/availability", response_model=SeatAvailabilityOut)
+def list_seat_availability(show_id: int, db=Depends(get_db)):
+
+
+
+
 
 
 if __name__ == "__main__":
