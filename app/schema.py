@@ -45,7 +45,16 @@ class SeatOut(BaseModel):
     class Config:
         orm_mode = True
 
- 
+class SeatAvailabilityOut(BaseModel):
+    seat_id: str
+    seat_number: str
+    status: Literal["AVAILABLE", "HELD", "RESERVED"]
+    hold_expiry: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
 # Reservation Schemas
 class ReservationCreate(BaseModel):
     seat_number: str
@@ -63,3 +72,4 @@ class ReservationOut(BaseModel):
 
     class Config:
         orm_mode = True
+
