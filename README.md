@@ -1,6 +1,6 @@
 # Event Ticketing System — FastAPI + Postgres
 
-A production-flavored backend for selling event seats with time-boxed holds, race-safe confirmation logic, and database-level guarantees. The project demonstrates clean API design, SQLAlchemy 2.0 usage, and a tested workflow from migrations through endpoints.
+A backend system that entailsselling event seats with time-boxed holds, race-safe confirmation logic, and database-level guarantees. 
 
 ## Features
 - **Shows & Seats:** Each show manages its own normalized, deduplicated seat labels (`Seat(seat_number, show_id)`).
@@ -12,11 +12,11 @@ A production-flavored backend for selling event seats with time-boxed holds, rac
 
 ## Stack
 - FastAPI with Pydantic v2 validation
-- SQLAlchemy 2.x ORM
+- SQLAlchemy ORM
 - PostgreSQL
 - Alembic migrations
-- Pytest (API + DB)
-- Optional local runner: Uvicorn
+- Pytest 
+- Uvicorn
 
 ## Project Layout
 ```
