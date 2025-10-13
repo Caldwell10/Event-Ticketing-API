@@ -77,13 +77,6 @@ Interactive docs: http://127.0.0.1:8001/docs
    uvicorn app.main:app --reload --port 8001
    ```
 
-## Testing
-Tests run against PostgreSQL using the app engine so partial indexes and `now()` behave like production.
-```bash
-createdb event_ticketing_test
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/event_ticketing_test"
-PYTHONPATH=. pytest -q
-```
 Coverage highlights:
 - Seat label normalization and duplicate protection (409 conflict)
 - Successful holds with future `hold_expiry`
@@ -96,19 +89,12 @@ Coverage highlights:
 - **Time handling:** Expiry checks rely on database time (via `SELECT now()`), not application wall clock.
 - **Idempotency:** Repeat confirmations return the `CONFIRMED` reservation; repeat releases return the `CANCELLED` reservation.
 
-## Useful Commands
-```bash
-# Create a migration after model changes
-alembic revision --autogenerate -m "describe change"
-alembic upgrade head
-alembic downgrade -1
-```
 
-## Roadmap / Nice-to-haves
+## Future things to implement 
 - Background job to mark stale `HELD` reservations as `EXPIRED`
 - Idempotency keys for hold/confirm endpoints
 - Pagination and filters for availability queries
-- Authentication (e.g., JWT) and admin tooling
-- Rate limiting (e.g., slowapi)
-- Docker Compose (API + Postgres) for one-command spin-up
-- Deployment targets (Railway, Render, Fly.io)
+- Authentication e.g., JWT and admin tooling
+- Rate limiting 
+- Docker Compose for Postgres for one-command spin-up
+- Deployment targets using Render
