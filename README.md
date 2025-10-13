@@ -1,31 +1,22 @@
 # Event Ticketing System — FastAPI + Postgres
 
-A backend system that entailsselling event seats with time-boxed holds, race-safe confirmation logic, and database-level guarantees. 
+A backend system that entails selling event seats with time-boxed holds, race-safe confirmation logic, and database-level guarantees. 
 
 ## Features
 - **Shows & Seats:** Each show manages its own normalized, deduplicated seat labels (`Seat(seat_number, show_id)`).
 - **Reservation lifecycle:** Seats progress through `HELD → CONFIRMED → (CANCELLED | EXPIRED)` with automatic expiry at `hold_expiry`.
-- **Race-safety:** Partial unique index plus `SELECT ... FOR UPDATE` ensures one active reservation per seat.
+- **Race-safety:** Partial unique index ensures one active reservation per seat.
 - **Idempotent workflows:** Confirming or releasing the same reservation twice returns the current state instead of failing.
 - **Availability view:** Per-show availability reports each seat as `AVAILABLE`, `HELD` (with expiry), or `CONFIRMED`.
 - **Tests:** Pytest suite covers API flows, DB constraints, and expiry edge cases.
 
 ## Stack
-- FastAPI with Pydantic v2 validation
+- FastAPI with Pydantic validation
 - SQLAlchemy ORM
 - PostgreSQL
 - Alembic migrations
 - Pytest 
 - Uvicorn
-
-## Project Layout
-```
-app/             # FastAPI application, models, schemas, services
-migrations/      # Alembic configuration and versioned migrations
-tests/           # Pytest suite (fixtures, helpers, endpoint tests)
-alembic.ini      # Alembic CLI configuration
-requirements.txt # Python dependencies
-```
 
 ## Data Model (Simplified)
 ```
@@ -85,7 +76,7 @@ Coverage highlights:
 
 ## Design Notes
 - **Normalization:** Seat labels are trimmed & uppercased before persistence, with request-side duplicate checks plus DB uniqueness.
-- **Race safety:** The partial unique index enforces a single active reservation per seat. Confirm/release endpoints issue `SELECT ... FOR UPDATE` to serialize updates.
+- **Race safety:** The partial unique index enforces a single active reservation per seat. 
 - **Time handling:** Expiry checks rely on database time (via `SELECT now()`), not application wall clock.
 - **Idempotency:** Repeat confirmations return the `CONFIRMED` reservation; repeat releases return the `CANCELLED` reservation.
 
