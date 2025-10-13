@@ -209,14 +209,5 @@ def release_seat_reservation(reservation_id: int, db=Depends(get_db)):
 
     return reservation
 
-# list seats with status
-@app.get("/shows/{show_id}/availability", response_model=SeatAvailabilityOut)
-def list_seat_availability(show_id: int, db=Depends(get_db)):
-
-
-
-
-
-
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8001) 
