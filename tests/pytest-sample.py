@@ -1,6 +1,4 @@
-import pytest
-
-
+# Simple pytest example
 def function_to_test(x):
     return x + 1
 
