@@ -1,4 +1,4 @@
-# Event Ticketing System — FastAPI + Postgres
+# Event Ticketing System 
 
 A backend system that entails selling event seats with time-boxed holds, race-safe confirmation logic, and database-level guarantees. 
 
