@@ -35,7 +35,7 @@ ON reservations(seat_id)
 WHERE status IN ('HELD','CONFIRMED');
 ```
 
-## API (v1)
+## API
 - `POST /users/` → create a user `{ name, phone_number, email, password }`.
 - `POST /shows/` → create a show `{ title, venue, starts_at }`.
 - `POST /shows/{show_id}/seats` → bulk create seats, normalizing labels (`["A1", "A2", " c5 "] → ["A1","A2","C5"]`).
