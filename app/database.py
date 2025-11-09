@@ -2,9 +2,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+from dotenv import load_dotenv
 
-# Load environement variable from .env file to prevent exposing sensitive DB credentials
-DATABASE_URL = "postgresql+psycopg2://postgres:postgres@localhost:5432/event_ticketing"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Create the SQLAlchemy engine
 engine = create_engine(DATABASE_URL)
@@ -24,4 +26,5 @@ def get_db():
         db.close()
 
 
-
+if __name__ == "__main__":
+    print(f"Working here: {DATABASE_URL}")
