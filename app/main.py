@@ -8,10 +8,10 @@ from sqlalchemy import select, func
 import uvicorn
 
 
-# Create the FastAPI app
+# Create FastAPI app
 app = FastAPI()
 
-# Evaluating root endpoint
+# Evaluate root endpoint
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Event Ticketing System API"}
