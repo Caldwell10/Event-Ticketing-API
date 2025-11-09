@@ -1,14 +1,12 @@
 from fastapi import FastAPI, HTTPException, Depends
-from schema import UserCreate, UserOut, ShowCreate, ShowOut, SeatCreateBulk, SeatOut, ReservationCreate, ReservationOut, SeatAvailabilityOut
-from models import User, Show, Seat, Reservation
-from database import get_db
-from services import hash_password, normalize_seat_labels, calculate_hold_expiry
+from app.schema import UserCreate, UserOut, ShowCreate, ShowOut, SeatCreateBulk, SeatOut, ReservationCreate, ReservationOut
+from app.models import User, Show, Seat, Reservation
+from app.database import get_db
+from app.services import hash_password, normalize_seat_labels, calculate_hold_expiry
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select, func
 import uvicorn
 
-
-# Create FastAPI app
 app = FastAPI()
 
 # Evaluate root endpoint
