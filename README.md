@@ -18,23 +18,6 @@ A backend system that entails selling event seats with time-boxed holds, race-sa
 - Pytest 
 - Uvicorn
 
-## Data Model (Simplified)
-```
-User(id, name, phone_number, email, password)
-Show(id, title, venue, starts_at)
-Seat(id, show_id -> Show.id, seat_number UNIQUE per show)
-Reservation(
-  id, user_id -> User.id, seat_id -> Seat.id,
-  status ∈ {HELD, CONFIRMED, EXPIRED, CANCELLED},
-  hold_expiry, created_at, updated_at
-)
-
--- Prevent double booking
-CREATE UNIQUE INDEX unique_active_reservation_per_seat
-ON reservations(seat_id)
-WHERE status IN ('HELD','CONFIRMED');
-```
-
 ## API
 - `POST /users/` → create a user `{ name, phone_number, email, password }`.
 - `POST /shows/` → create a show `{ title, venue, starts_at }`.
